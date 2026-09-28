@@ -32,7 +32,6 @@ class VaultNeuralEngine {
     private static func searchAppleMaps(for vendor: String) async -> String? {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = vendor
-        // We limit the search to businesses and points of interest
         request.pointOfInterestFilter = .includingAll
         
         let search = MKLocalSearch(request: request)
@@ -44,28 +43,22 @@ class VaultNeuralEngine {
         }
         
         // Translating Apple's internal Map categories into your Vault categories
-        // Translating Apple's internal Map categories into your Vault categories
-                switch poiCategory {
-                case .restaurant, .cafe, .bakery, .foodMarket, .brewery:
-                    return "Dining"
-                case .hotel, .airport, .publicTransport: // Corrected from .airline
-                    return "Travel"
-                case .store, .pharmacy: // Corrected from .supermarket
-                    return "Supplies"
-                case .gasStation, .evCharger:
-                    return "Utilities"
-                default:
-                    // If it's a hardware store, electronics, or something MapKit doesn't explicitly flag,
-                    // it safely passes the buck to the Generative AI to figure out!
-                    return nil
-                }
+        switch poiCategory {
+        case .restaurant, .cafe, .bakery, .foodMarket, .brewery:
+            return "Dining"
+        case .hotel, .airport, .publicTransport:
+            return "Travel"
+        case .store, .pharmacy:
+            return "Supplies"
+        case .gasStation, .evCharger:
+            return "Utilities"
+        default:
+            return nil
+        }
     }
     
-    // MARK: - Generative AI Integration (ChatGPT / Claude / Gemini API)
+    // MARK: - Generative AI Integration
     private static func askGenerativeAI(vendor: String) async -> String {
-        // NOTE: To make this live, you would drop your OpenAI or Gemini API key here
-        // and format a URLSession POST request. For now, this is the architecture:
-        
         let prompt = """
         I just made a purchase from a vendor named "\(vendor)".
         Categorize this transaction into exactly one of these categories: 
@@ -73,18 +66,16 @@ class VaultNeuralEngine {
         Reply with ONLY the category word.
         """
         
-        // Simulated API Call
         do {
-            // try await URLSession.shared.data(for: aiRequest)
-            try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second artificial delay
+            // Simulated API Call
+            try await Task.sleep(nanoseconds: 1_000_000_000)
             
-            // Simulated AI reasoning:
             let text = vendor.lowercased()
             if text.contains("aws") || text.contains("cloud") || text.contains("github") { return "Software" }
             if text.contains("maxbhi") || text.contains("screen") || text.contains("lens") { return "Hardware" }
             if text.contains("decathlon") || text.contains("skin") { return "Supplies" }
             
-            return "Miscellaneous" // The ultimate fallback
+            return "Miscellaneous"
         } catch {
             return "Miscellaneous"
         }
