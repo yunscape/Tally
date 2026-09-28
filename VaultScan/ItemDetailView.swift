@@ -5,12 +5,13 @@ import PassKit
 struct ItemDetailView: View {
     @Bindable var item: VaultItem
     
+    // Dynamically fetch available semantic clusters for the Category Picker
+    @Query(sort: \VaultCluster.name) private var clusters: [VaultCluster]
+    
     // --- Wallet Integration States ---
     @State private var isGeneratingPass = false
     @State private var generatedPass: PKPass?
     @State private var showPassSheet = false
-    
-    let categories = ["Hardware", "Software", "Travel", "Utilities", "Supplies", "Dining", "Miscellaneous"]
     
     var body: some View {
         Form {
@@ -23,7 +24,7 @@ struct ItemDetailView: View {
                 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Vendor").font(.caption).foregroundColor(.secondary)
-                    TextField("Vendor (e.g., Maxbhi.com)", text: $item.vendorName)
+                    TextField("Vendor (e.g., Apple, Maxbhi.com)", text: $item.vendorName)
                         .textFieldStyle(.roundedBorder)
                 }
                 
@@ -39,9 +40,11 @@ struct ItemDetailView: View {
                 DatePicker("Date", selection: $item.date, displayedComponents: .date)
                     .datePickerStyle(.compact)
                 
-                Picker("Category", selection: $item.category) {
-                    ForEach(categories, id: \.self) { category in
-                        Text(category).tag(category)
+                // Safely handles the new Graph Edge relationship
+                Picker("Category", selection: $item.cluster) {
+                    Text("Miscellaneous").tag(nil as VaultCluster?)
+                    ForEach(clusters) { cluster in
+                        Text(cluster.name).tag(cluster as VaultCluster?)
                     }
                 }
                 
@@ -52,7 +55,7 @@ struct ItemDetailView: View {
                 header: Text("Warranty & Support"),
                 footer: Text("Set expiration dates to track return windows for replacement components.")
             ) {
-                Toggle("Track Warranty", isOn: $item.isWarrantyTracked.animation())
+                Toggle("Track Warranty", isOn: $item.isWarrantyTracked)
                 
                 if item.isWarrantyTracked {
                     DatePicker("Expiry Date", selection: Binding(
@@ -72,6 +75,7 @@ struct ItemDetailView: View {
                     .padding(.vertical, 4)
                 }
             }
+            .animation(.default, value: item.isWarrantyTracked)
             
             // --- NEW: THE APPLE WALLET SECTION ---
             #if os(iOS)
@@ -125,7 +129,7 @@ struct ItemDetailView: View {
         isGeneratingPass = true
         
         Task {
-            // Reaches out to your future backend to get the signed file
+            // Reaches out to the backend simulation service
             if let pass = await WalletPassService.fetchSignedPass(for: item) {
                 await MainActor.run {
                     generatedPass = pass

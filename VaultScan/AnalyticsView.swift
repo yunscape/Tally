@@ -14,10 +14,13 @@ struct AnalyticsView: View {
     @State private var pdfURL: URL?
     @State private var rawSelectedDate: Date?
     
+    // 1. Move chart data to State to prevent main-thread stuttering during scrubbing
+    @State private var chartData: [DailyExpense] = []
+    
     var body: some View {
         NavigationStack {
             ZStack {
-                AmbientBackground()
+                AmbientBackground() // Ensure this is accessible in your global scope
                 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -83,7 +86,7 @@ struct AnalyticsView: View {
                         .shadow(color: .black.opacity(0.04), radius: 20, y: 10)
                         .padding(.horizontal, 20)
                         
-                        // 3. EXPORT DATA SECTION (Preserving PDF & CSV Generator hooks)
+                        // 3. EXPORT DATA SECTION
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Export Reports")
                                 .font(.headline)
@@ -160,42 +163,41 @@ struct AnalyticsView: View {
                     #endif
                 }
             }
-            .onAppear {
-                csvURL = ReportGenerator.generateCSV(from: items)
-                
-                Task {
-                    await MainActor.run {
-                        pdfURL = PDFGenerator.generatePDF(from: items)
-                    }
-                }
+            // 2. Process data outside the render loop when items change
+            .task(id: items) {
+                await processDataAsync()
             }
             .preferredColorScheme(appTheme == 1 ? .light : appTheme == 2 ? .dark : nil)
         }
     }
     
-    private var chartData: [DailyExpense] {
+    // MARK: - Data Processing
+    @MainActor
+    private func processDataAsync() async {
+        // Calculate the chart grouping safely
         var data: [DailyExpense] = []
         let calendar = Calendar.current
             
-            // 1. Create a lightweight Hashable struct to replace the tuple
         struct GroupKey: Hashable {
             let date: Date
             let category: String
         }
             
-        // 2. Group using the new struct instead of (Date, String)
         let grouped = Dictionary(grouping: items) { item in
             let day = calendar.startOfDay(for: item.date)
             return GroupKey(date: day, category: item.cluster?.name ?? "Miscellaneous")
         }
         
-        // 3. Unpack the struct keys to build the final array
         for (key, groupItems) in grouped {
             let total = groupItems.reduce(0) { $0 + $1.amount }
             data.append(DailyExpense(date: key.date, category: key.category, amount: total))
         }
         
-        return data.sorted { $0.date < $1.date }
+        chartData = data.sorted { $0.date < $1.date }
+        
+        // Refresh export reports so they contain the latest artifacts
+        csvURL = ReportGenerator.generateCSV(from: items)
+        pdfURL = PDFGenerator.generatePDF(from: items)
     }
 }
 

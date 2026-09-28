@@ -2,6 +2,7 @@ import SwiftUI
 
 // This checks if we are running on an iPhone/iPad
 #if os(iOS)
+import UIKit
 import VisionKit
 
 struct DocumentScannerView: UIViewControllerRepresentable {

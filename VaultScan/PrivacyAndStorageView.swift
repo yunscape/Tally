@@ -98,7 +98,7 @@ struct PrivacyAndStorageView: View {
     
     private func calculateCacheSize() {
         // Asynchronously calculate the size of the temporary directory
-        Task {
+        Task.detached(priority: .background) {
             let tempDirectoryURL = FileManager.default.temporaryDirectory
             var totalSize: Int64 = 0
             
@@ -129,26 +129,34 @@ struct PrivacyAndStorageView: View {
     }
     
     private func clearTemporaryCache() {
-        let tempDirectoryURL = FileManager.default.temporaryDirectory
-        
-        do {
-            let contents = try FileManager.default.contentsOfDirectory(at: tempDirectoryURL, includingPropertiesForKeys: nil)
-            for fileURL in contents {
-                try FileManager.default.removeItem(at: fileURL)
+        // Offload file deletion to a background thread to prevent UI freezing
+        Task.detached(priority: .userInitiated) {
+            let tempDirectoryURL = FileManager.default.temporaryDirectory
+            
+            do {
+                let contents = try FileManager.default.contentsOfDirectory(at: tempDirectoryURL, includingPropertiesForKeys: nil)
+                for fileURL in contents {
+                    try FileManager.default.removeItem(at: fileURL)
+                }
+                // Recalculate size after deletion
+                await MainActor.run {
+                    self.calculateCacheSize()
+                }
+            } catch {
+                print("Failed to clear cache: \(error.localizedDescription)")
             }
-            // Recalculate size after deletion
-            calculateCacheSize()
-        } catch {
-            print("Failed to clear cache: \(error.localizedDescription)")
         }
     }
     
     private func nukeDatabase() {
-        do {
-            try context.delete(model: VaultItem.self)
-            try context.save()
-        } catch {
-            print("Failed to wipe database: \(error.localizedDescription)")
+        // Run database deletion asynchronously
+        Task {
+            do {
+                try context.delete(model: VaultItem.self)
+                try context.save()
+            } catch {
+                print("Failed to wipe database: \(error.localizedDescription)")
+            }
         }
     }
 }

@@ -92,7 +92,12 @@ struct CardBackView: View {
             }
             Divider()
             
-            HStack { Text("Category"); Spacer(); Text(item.category).fontWeight(.semibold) }
+            HStack {
+                Text("Category")
+                Spacer()
+                // Safely accesses the graph cluster relationship
+                Text(item.cluster?.name ?? "Miscellaneous").fontWeight(.semibold)
+            }
             HStack { Text("Date"); Spacer(); Text(item.date, format: .dateTime.month().day().year()) }
             if let serial = item.serialNumber, !serial.isEmpty {
                 HStack { Text("Serial"); Spacer(); Text(serial).monospaced() }

@@ -4,10 +4,17 @@ import PhotosUI
 import PDFKit
 import UniformTypeIdentifiers
 
+// 1. Added Conditional UI Framework Imports
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     
-    // --- UPDATED: Querying both the items and the graph clusters ---
+    // --- Querying both the items and the graph clusters ---
     @Query(sort: \VaultItem.date, order: .reverse) private var items: [VaultItem]
     @Query(sort: \VaultCluster.name) private var clusters: [VaultCluster]
     
@@ -20,7 +27,7 @@ struct ContentView: View {
     @State private var selectedTab = 0
     @State private var selectedItem: VaultItem?
     
-    // --- NEW: Active Cluster Selection ---
+    // --- Active Cluster Selection ---
     @State private var activeClusterFilter: VaultCluster? = nil
     
     // --- Banner State ---
@@ -29,14 +36,12 @@ struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @AppStorage("reduceMotion") private var reduceMotion = false
     @AppStorage("useWalletLayout") private var useWalletLayout = false
-    
-    // --- Reading the Haptics Preference ---
     @AppStorage("enableHaptics") private var enableHaptics = true
     
     var totalExpenses: Double { items.reduce(0) { $0 + $1.amount } }
     var activeWarranties: Int { items.filter { $0.isWarrantyTracked }.count }
     
-    // --- UPDATED: Filtering first by Graph Cluster, then by Tab ---
+    // --- Filtering first by Graph Cluster, then by Tab ---
     var filteredItems: [VaultItem] {
         var baseItems = items
         
@@ -89,7 +94,7 @@ struct ContentView: View {
                             if enableHaptics { HapticManager.shared.playImpact() }
                         }
                         
-                        // --- NEW: SMART CLUSTERS HORIZONTAL SCROLL ---
+                        // --- SMART CLUSTERS HORIZONTAL SCROLL ---
                         if !clusters.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Smart Clusters")
@@ -180,7 +185,7 @@ struct ContentView: View {
                         Text(activeClusterFilter == nil ? "No artifacts found" : "No artifacts in this cluster")
                             .font(.subheadline).foregroundColor(.secondary).padding(.vertical, 40)
                     } else if useWalletLayout {
-                        // --- THE NEW 3D SPATIAL WALLET FAN ---
+                        // --- THE 3D SPATIAL WALLET FAN ---
                         WalletFanLayout(items: filteredItems, selectedItem: $selectedItem)
                             .padding(.horizontal, 20)
                     } else {
@@ -267,7 +272,7 @@ struct ContentView: View {
                 }
             }
         }
-        // --- NEW: Transient Success Banner ---
+        // --- Transient Success Banner ---
         .overlay(alignment: .top) {
             if showSuccessBanner {
                 HStack(spacing: 12) {
@@ -295,7 +300,7 @@ struct ContentView: View {
         }
     }
     
-    // --- UPDATED: Relational Graph Architecture & Neural Engine Trigger ---
+    // --- Relational Graph Architecture & Neural Engine Trigger ---
     private func processInstantScan(_ cgImage: CGImage) {
         isProcessing = true
         
@@ -350,11 +355,14 @@ struct ContentView: View {
         }
     }
     
+    // 2. Secured PDF Extraction
     private func parsePDF(at url: URL) {
         guard url.startAccessingSecurityScopedResource() else { return }
         isProcessing = true
         
         guard let pdfDocument = PDFDocument(url: url),
+              !pdfDocument.isLocked,           // Ensure we don't crash on password-protected PDFs
+              pdfDocument.pageCount > 0,       // Ensure the PDF isn't entirely empty
               let firstPage = pdfDocument.page(at: 0) else {
             url.stopAccessingSecurityScopedResource()
             isProcessing = false
@@ -399,7 +407,6 @@ struct ContentView: View {
 
 // MARK: - Subcomponents
 
-// --- NEW: Smart Cluster UI Component ---
 struct SmartClusterCapsule: View {
     let title: String
     let icon: String
@@ -462,7 +469,7 @@ struct VaultArtifactCard: View {
             }
             
             HStack {
-                // --- UPDATED: Now accesses the new relational graph cluster ---
+                // Accesses the relational graph cluster
                 Text(item.cluster?.name ?? "Miscellaneous")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .padding(.horizontal, 10)

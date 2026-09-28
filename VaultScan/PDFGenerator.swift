@@ -38,7 +38,8 @@ class PDFGenerator {
                     Text(item.vendorName)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    Text(item.category)
+                    // Safely unwraps the relational graph cluster
+                    Text(item.cluster?.name ?? "Miscellaneous")
                         .frame(width: 100, alignment: .leading)
                     
                     Text(String(format: "$%.2f", item.amount))

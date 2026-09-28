@@ -21,12 +21,15 @@ class ContinuityButton: NSButton, NSServicesMenuRequestor {
     
     init() {
         super.init(frame: .zero)
-        self.isTransparent = true // Makes the AppKit button invisible so we only see our custom UI
+        // Makes the AppKit button invisible so we only see our custom SwiftUI UI
+        self.isTransparent = true
         self.target = self
         self.action = #selector(triggerContinuityMenu)
     }
     
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     @objc func triggerContinuityMenu() {
         self.window?.makeFirstResponder(self)
@@ -35,7 +38,7 @@ class ContinuityButton: NSButton, NSServicesMenuRequestor {
         NSApp.sendAction(Selector(("importFromDevice:")), to: nil, from: self)
     }
     
-    // FIX 1: acceptsFirstResponder is a property in modern Swift, not a function
+    // acceptsFirstResponder is a property in modern Swift, not a function
     override var acceptsFirstResponder: Bool { return true }
     
     // Tells the Mac we are ready to receive an image from the iPhone
@@ -46,7 +49,7 @@ class ContinuityButton: NSButton, NSServicesMenuRequestor {
         return super.validRequestor(forSendType: sendType, returnType: returnType)
     }
     
-    // FIX 2: Removed 'override' because this is fulfilling a protocol
+    // Fulfills the NSServicesMenuRequestor protocol to read the incoming image
     func readSelection(from pboard: NSPasteboard) -> Bool {
         guard let images = pboard.readObjects(forClasses: [NSImage.self], options: nil) as? [NSImage],
               let firstImage = images.first,

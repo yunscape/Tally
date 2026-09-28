@@ -5,6 +5,7 @@ import UIKit
 import AppKit
 #endif
 
+@MainActor
 class HapticManager {
     static let shared = HapticManager()
     

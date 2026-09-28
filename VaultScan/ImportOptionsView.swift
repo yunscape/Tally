@@ -4,6 +4,12 @@ import UniformTypeIdentifiers
 import PhotosUI
 import PDFKit
 
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
 struct ImportOptionsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -120,6 +126,8 @@ struct ImportOptionsView: View {
         isProcessing = true
         
         guard let pdfDocument = PDFDocument(url: url),
+              !pdfDocument.isLocked,
+              pdfDocument.pageCount > 0,
               let firstPage = pdfDocument.page(at: 0) else {
             url.stopAccessingSecurityScopedResource()
             isProcessing = false
@@ -148,13 +156,14 @@ struct ImportOptionsView: View {
                 title: "Imported Receipt",
                 vendorName: result.vendor,
                 amount: result.amount,
-                category: "Hardware",
                 isWarrantyTracked: false
             )
-            context.insert(newItem)
             
-            isProcessing = false
-            dismiss()
+            await MainActor.run {
+                context.insert(newItem)
+                isProcessing = false
+                dismiss()
+            }
         }
     }
 }

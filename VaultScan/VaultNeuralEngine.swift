@@ -9,10 +9,10 @@ class VaultNeuralEngine {
         let cleanVendor = vendor.trimmingCharacters(in: .whitespacesAndNewlines)
         
         // --- TIER 1: THE REFLEX (Local Memory) ---
-        // If you've categorized this vendor before, it instantly remembers.
+        // If you've categorized this vendor before, it instantly remembers using the graph cluster.
         if let previousEntry = history.first(where: { $0.vendorName.caseInsensitiveCompare(cleanVendor) == .orderedSame }) {
             print("🧠 Neural Engine: Categorized via Local Memory")
-            return previousEntry.category
+            return previousEntry.cluster?.name ?? "Miscellaneous"
         }
         
         // --- TIER 2: THE ATLAS (Apple MapKit) ---
