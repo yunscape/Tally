@@ -1,0 +1,92 @@
+import Foundation
+import SwiftData
+import MapKit
+
+class VaultNeuralEngine {
+    
+    // The engine is now 'async' because it needs time to ping Apple Maps and the AI API
+    static func autoCategorize(vendor: String, history: [VaultItem]) async -> String {
+        let cleanVendor = vendor.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // --- TIER 1: THE REFLEX (Local Memory) ---
+        // If you've categorized this vendor before, it instantly remembers.
+        if let previousEntry = history.first(where: { $0.vendorName.caseInsensitiveCompare(cleanVendor) == .orderedSame }) {
+            print("🧠 Neural Engine: Categorized via Local Memory")
+            return previousEntry.category
+        }
+        
+        // --- TIER 2: THE ATLAS (Apple MapKit) ---
+        // Asks Apple's global database what kind of business this is.
+        if let mapCategory = await searchAppleMaps(for: cleanVendor) {
+            print("🗺️ Neural Engine: Categorized via Apple Maps")
+            return mapCategory
+        }
+        
+        // --- TIER 3: THE BRAIN (Generative AI Bridge) ---
+        // If Apple Maps fails (e.g., it's a software service or online store), we ask the AI.
+        print("🤖 Neural Engine: Falling back to Generative AI")
+        return await askGenerativeAI(vendor: cleanVendor)
+    }
+    
+    // MARK: - MapKit Integration
+    private static func searchAppleMaps(for vendor: String) async -> String? {
+        let request = MKLocalSearch.Request()
+        request.naturalLanguageQuery = vendor
+        // We limit the search to businesses and points of interest
+        request.pointOfInterestFilter = .includingAll
+        
+        let search = MKLocalSearch(request: request)
+        
+        guard let response = try? await search.start(),
+              let firstResult = response.mapItems.first,
+              let poiCategory = firstResult.pointOfInterestCategory else {
+            return nil
+        }
+        
+        // Translating Apple's internal Map categories into your Vault categories
+        // Translating Apple's internal Map categories into your Vault categories
+                switch poiCategory {
+                case .restaurant, .cafe, .bakery, .foodMarket, .brewery:
+                    return "Dining"
+                case .hotel, .airport, .publicTransport: // Corrected from .airline
+                    return "Travel"
+                case .store, .pharmacy: // Corrected from .supermarket
+                    return "Supplies"
+                case .gasStation, .evCharger:
+                    return "Utilities"
+                default:
+                    // If it's a hardware store, electronics, or something MapKit doesn't explicitly flag,
+                    // it safely passes the buck to the Generative AI to figure out!
+                    return nil
+                }
+    }
+    
+    // MARK: - Generative AI Integration (ChatGPT / Claude / Gemini API)
+    private static func askGenerativeAI(vendor: String) async -> String {
+        // NOTE: To make this live, you would drop your OpenAI or Gemini API key here
+        // and format a URLSession POST request. For now, this is the architecture:
+        
+        let prompt = """
+        I just made a purchase from a vendor named "\(vendor)".
+        Categorize this transaction into exactly one of these categories: 
+        Hardware, Software, Travel, Utilities, Supplies, Dining, Miscellaneous.
+        Reply with ONLY the category word.
+        """
+        
+        // Simulated API Call
+        do {
+            // try await URLSession.shared.data(for: aiRequest)
+            try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second artificial delay
+            
+            // Simulated AI reasoning:
+            let text = vendor.lowercased()
+            if text.contains("aws") || text.contains("cloud") || text.contains("github") { return "Software" }
+            if text.contains("maxbhi") || text.contains("screen") || text.contains("lens") { return "Hardware" }
+            if text.contains("decathlon") || text.contains("skin") { return "Supplies" }
+            
+            return "Miscellaneous" // The ultimate fallback
+        } catch {
+            return "Miscellaneous"
+        }
+    }
+}
