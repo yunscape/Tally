@@ -43,11 +43,12 @@ struct SettingsView: View {
                         Text("Dark").tag(2)
                     }
                     
-                    // The new layout toggle
-                    Toggle(isOn: $useWalletLayout.animation(.spring(response: 0.4, dampingFraction: 0.8))) {
+                    // Fixed deprecated binding animation by observing it on the Section below
+                    Toggle(isOn: $useWalletLayout) {
                         Label("3D Wallet Layout", systemImage: "square.stack.3d.up.fill")
                     }
                 }
+                .animation(.spring(response: 0.4, dampingFraction: 0.8), value: useWalletLayout)
                 
                 Section("Security & Privacy") {
                     Toggle(isOn: Binding(
@@ -57,7 +58,6 @@ struct SettingsView: View {
                         Label("Require Face ID / Touch ID", systemImage: "faceid")
                     }
                     
-                    // --- NEW: iCloud Sync Toggle inside the body ---
                     Toggle(isOn: Binding(
                         get: { enableCloudSync },
                         set: { newValue in
@@ -142,7 +142,6 @@ struct SettingsView: View {
             .onChange(of: appTheme) { _, _ in
                 triggerSmoothTransition()
             }
-            // --- NEW: The Spatial Popup Overlay attached to the main view ---
             .overlay {
                 if showSyncExplanation {
                     ZStack {

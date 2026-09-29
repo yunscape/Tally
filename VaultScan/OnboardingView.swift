@@ -54,8 +54,11 @@ struct OnboardingView: View {
                     )
                     .tag(2)
                 }
+                // --- macOS COMPATIBILITY FIX ---
+                #if os(iOS)
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .never))
+                #endif
                 
                 // Bottom Action Button
                 VStack(spacing: 16) {

@@ -88,7 +88,10 @@ struct PrivacyAndStorageView: View {
             }
         }
         .navigationTitle("Privacy & Storage")
+        // --- macOS COMPATIBILITY FIX ---
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .onAppear {
             calculateCacheSize()
         }
@@ -97,36 +100,36 @@ struct PrivacyAndStorageView: View {
     // MARK: - Logic & File Management
     
     private func calculateCacheSize() {
-        // Asynchronously calculate the size of the temporary directory
-        Task.detached(priority: .background) {
-            let tempDirectoryURL = FileManager.default.temporaryDirectory
-            var totalSize: Int64 = 0
-            
-            do {
-                let contents = try FileManager.default.contentsOfDirectory(at: tempDirectoryURL, includingPropertiesForKeys: [.fileSizeKey])
-                for url in contents {
-                    let resourceValues = try url.resourceValues(forKeys: [.fileSizeKey])
-                    if let fileSize = resourceValues.fileSize {
-                        totalSize += Int64(fileSize)
+            Task.detached(priority: .background) {
+                let tempDirectoryURL = FileManager.default.temporaryDirectory
+                var totalSize: Int64 = 0
+                
+                do {
+                    let contents = try FileManager.default.contentsOfDirectory(at: tempDirectoryURL, includingPropertiesForKeys: [.fileSizeKey])
+                    for url in contents {
+                        let resourceValues = try url.resourceValues(forKeys: [.fileSizeKey])
+                        if let fileSize = resourceValues.fileSize {
+                            totalSize += Int64(fileSize)
+                        }
+                    }
+                    
+                    let formatter = ByteCountFormatter()
+                    formatter.allowedUnits = [.useMB, .useKB]
+                    formatter.countStyle = .file
+                    
+                    // Freeze into immutable values before crossing actor boundaries
+                    let calculatedString = totalSize > 0 ? formatter.string(fromByteCount: totalSize) : "0 KB"
+                    
+                    await MainActor.run {
+                        self.cacheSize = calculatedString
+                    }
+                } catch {
+                    await MainActor.run {
+                        self.cacheSize = "Unknown"
                     }
                 }
-                
-                // Format the bytes into a readable string (e.g., "14.2 MB")
-                let formatter = ByteCountFormatter()
-                formatter.allowedUnits = [.useMB, .useKB]
-                formatter.countStyle = .file
-                
-                let sizeString = formatter.string(fromByteCount: totalSize)
-                
-                await MainActor.run {
-                    self.cacheSize = totalSize > 0 ? sizeString : "0 KB"
-                }
-                
-            } catch {
-                await MainActor.run { self.cacheSize = "Unknown" }
             }
         }
-    }
     
     private func clearTemporaryCache() {
         // Offload file deletion to a background thread to prevent UI freezing

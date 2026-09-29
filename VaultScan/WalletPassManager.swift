@@ -1,6 +1,7 @@
 import SwiftUI
 import PassKit
 
+#if os(iOS)
 // MARK: - 1. The Regulated Apple Wallet Button
 // Apple strictly polices the design of this button. We must use their native class.
 struct AddToWalletButton: UIViewRepresentable {
@@ -43,6 +44,7 @@ struct AddPassView: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: PKAddPassesViewController, context: Context) {}
 }
+#endif
 
 // MARK: - 3. The Backend Simulation Service
 class WalletPassService {

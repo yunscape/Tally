@@ -4,15 +4,15 @@ import LocalAuthentication
 
 @main
 struct VaultScanApp: App {
-    // 1. Moving the theme here fixes the Sheet bug!
+    // Moving the theme here ensures it applies globally and fixes Sheet layout bugs
     @AppStorage("appTheme") private var appTheme = 0
     @AppStorage("requireFaceID") private var requireFaceID = false
     
     @State private var isUnlocked = false
     
-    // --- NEW: CloudKit-Compliant Container Initialization ---
+    // --- CloudKit-Compliant Container Initialization ---
     var sharedModelContainer: ModelContainer = {
-        // --- UPDATED: Registering both VaultItem and VaultCluster for the Graph Architecture ---
+        // Registering both VaultItem and VaultCluster for the Graph Architecture
         let schema = Schema([VaultItem.self, VaultCluster.self])
         
         // CloudKit requires the database to be stored on disk, not just in memory
@@ -34,7 +34,7 @@ struct VaultScanApp: App {
             ZStack {
                 ContentView()
                 
-                // 2. The Native App Lock Overlay
+                // The Native App Lock Overlay
                 if requireFaceID && !isUnlocked {
                     VStack(spacing: 20) {
                         Image(systemName: "lock.shield.fill")
@@ -59,11 +59,11 @@ struct VaultScanApp: App {
                 if requireFaceID { authenticate() }
             }
         }
-        // --- UPDATED: Uses the CloudKit container instead of the default ---
+        // Uses the configured CloudKit container instead of the default
         .modelContainer(sharedModelContainer)
     }
     
-    // 3. Real Face ID / Touch ID Engine
+    // MARK: - Real Face ID / Touch ID Engine
     private func authenticate() {
         let context = LAContext()
         var error: NSError?

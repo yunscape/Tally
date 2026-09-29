@@ -58,26 +58,26 @@ class VaultNeuralEngine {
     }
     
     // MARK: - Generative AI Integration
-    private static func askGenerativeAI(vendor: String) async -> String {
-        let prompt = """
-        I just made a purchase from a vendor named "\(vendor)".
-        Categorize this transaction into exactly one of these categories: 
-        Hardware, Software, Travel, Utilities, Supplies, Dining, Miscellaneous.
-        Reply with ONLY the category word.
-        """
-        
-        do {
-            // Simulated API Call
-            try await Task.sleep(nanoseconds: 1_000_000_000)
+        private static func askGenerativeAI(vendor: String) async -> String {
+            // Discarded placeholder prompt until live API endpoint integration
+            _ = """
+            I just made a purchase from a vendor named "\(vendor)".
+            Categorize this transaction into exactly one of these categories: 
+            Hardware, Software, Travel, Utilities, Supplies, Dining, Miscellaneous.
+            Reply with ONLY the category word.
+            """
             
-            let text = vendor.lowercased()
-            if text.contains("aws") || text.contains("cloud") || text.contains("github") { return "Software" }
-            if text.contains("maxbhi") || text.contains("screen") || text.contains("lens") { return "Hardware" }
-            if text.contains("decathlon") || text.contains("skin") { return "Supplies" }
-            
-            return "Miscellaneous"
-        } catch {
-            return "Miscellaneous"
-        }
-    }
-}
+            do {
+                // Simulated API Call latency
+                try await Task.sleep(nanoseconds: 1_000_000_000)
+                
+                let text = vendor.lowercased()
+                if text.contains("aws") || text.contains("cloud") || text.contains("github") { return "Software" }
+                if text.contains("maxbhi") || text.contains("screen") || text.contains("lens") { return "Hardware" }
+                if text.contains("decathlon") || text.contains("skin") { return "Supplies" }
+                
+                return "Miscellaneous"
+            } catch {
+                return "Miscellaneous"
+            }
+        }}

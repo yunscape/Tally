@@ -23,7 +23,7 @@ class VaultIntelligenceEngine {
         var shortestDistance: Double = 1.0
         
         for cluster in existingClusters {
-            // FIX: Removed 'if let' because distance is guaranteed to return a Double, not an Optional
+            // No conditional unwrapping required since distance is a guaranteed Double
             let distance = embedding.distance(between: slmProposedTag.lowercased(), and: cluster.name.lowercased())
             
             if distance < shortestDistance {
@@ -43,7 +43,8 @@ class VaultIntelligenceEngine {
     
     private func simulateSLMReasoning(vendor: String, amount: Double) -> String {
         let v = vendor.lowercased()
-        if v.contains("apple") || v.contains("digikey") { return "Hardware" }
+        // Evaluates for PC rigging or standard parts
+        if v.contains("apple") || v.contains("maxbhi") { return "Hardware" }
         if v.contains("aws") || v.contains("figma") || v.contains("adobe") { return "Software" }
         if v.contains("hotel") || v.contains("decathlon") { return "Travel & Lifestyle" }
         if v.contains("mamagoto") || v.contains("cafe") { return "Dining" }

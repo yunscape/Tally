@@ -291,13 +291,8 @@ struct ContentView: View {
                 .transition(.move(edge: .top).combined(with: .scale(scale: 0.9)).combined(with: .opacity))
             }
         }
-        // --- THE ONBOARDING TRIGGER ---
-        .fullScreenCover(isPresented: Binding(
-            get: { !hasCompletedOnboarding },
-            set: { hasCompletedOnboarding = !$0 }
-        )) {
-            OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
-        }
+        // --- THE ONBOARDING TRIGGER (Platform Aware) ---
+        .modifier(OnboardingPresentationModifier(hasCompletedOnboarding: $hasCompletedOnboarding))
     }
     
     // --- Relational Graph Architecture & Neural Engine Trigger ---
@@ -402,6 +397,32 @@ struct ContentView: View {
         }
         
         url.stopAccessingSecurityScopedResource()
+    }
+}
+
+// MARK: - Platform-Aware Presentation Modifier
+struct OnboardingPresentationModifier: ViewModifier {
+    @Binding var hasCompletedOnboarding: Bool
+    
+    func body(content: Content) -> some View {
+        // Create a binding that evaluates the inverse logic needed for presentation
+        let presentationBinding = Binding(
+            get: { !hasCompletedOnboarding },
+            set: { newValue in hasCompletedOnboarding = !newValue }
+        )
+        
+        #if os(iOS)
+        // iOS supports immersive full-screen covers
+        content.fullScreenCover(isPresented: presentationBinding) {
+            OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+        }
+        #else
+        // macOS falls back to a standard modal sheet
+        content.sheet(isPresented: presentationBinding) {
+            OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
+                .frame(minWidth: 600, minHeight: 450)
+        }
+        #endif
     }
 }
 

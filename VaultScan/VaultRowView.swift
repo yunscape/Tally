@@ -4,7 +4,7 @@ struct VaultRowView: View {
     let item: VaultItem
     
     var categoryIcon: String {
-        // --- UPDATED: Safely unwraps the Graph Cluster name ---
+        // Safely unwraps the Graph Cluster name
         let clusterName = item.cluster?.name ?? "Miscellaneous"
         
         switch clusterName {
@@ -36,7 +36,7 @@ struct VaultRowView: View {
                     .font(.system(.headline, design: .rounded))
                 
                 HStack(spacing: 6) {
-                    // --- UPDATED: Displays the relational cluster name ---
+                    // Displays the relational cluster name
                     Text(item.cluster?.name ?? "Miscellaneous")
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .padding(.horizontal, 8)
