@@ -10,7 +10,6 @@ struct OnboardingView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Top Skip Bar
                 HStack {
                     Spacer()
                     if currentPage < 2 {
@@ -23,12 +22,10 @@ struct OnboardingView: View {
                         .foregroundColor(.secondary)
                         .padding(24)
                     } else {
-                        // Empty spacer to balance the layout on the final page
                         Color.clear.frame(height: 60)
                     }
                 }
-                
-                // Paging View Content
+
                 TabView(selection: $currentPage) {
                     OnboardingPage(
                         iconName: "square.stack.3d.up.fill",
@@ -54,13 +51,12 @@ struct OnboardingView: View {
                     )
                     .tag(2)
                 }
-                // --- macOS COMPATIBILITY FIX ---
+                
                 #if os(iOS)
                 .tabViewStyle(.page(indexDisplayMode: .always))
                 .indexViewStyle(.page(backgroundDisplayMode: .never))
                 #endif
                 
-                // Bottom Action Button
                 VStack(spacing: 16) {
                     Button(action: {
                         if currentPage < 2 {
@@ -90,7 +86,6 @@ struct OnboardingView: View {
     }
 }
 
-// MARK: - Individual Page Layout
 struct OnboardingPage: View {
     let iconName: String
     let iconColor: Color
@@ -101,7 +96,6 @@ struct OnboardingPage: View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Glowing Symbol Card
             ZStack {
                 Circle()
                     .fill(iconColor.opacity(0.12))

@@ -3,7 +3,6 @@ import SwiftUI
 #if os(macOS)
 import AppKit
 
-// This creates an invisible Mac button that sits on top of our SwiftUI button
 struct MacContinuityScannerOverlay: NSViewRepresentable {
     var onScanComplete: (CGImage) -> Void
     
@@ -21,7 +20,6 @@ class ContinuityButton: NSButton, NSServicesMenuRequestor {
     
     init() {
         super.init(frame: .zero)
-        // Makes the AppKit button invisible so we only see our custom SwiftUI UI
         self.isTransparent = true
         self.target = self
         self.action = #selector(triggerContinuityMenu)
@@ -34,14 +32,11 @@ class ContinuityButton: NSButton, NSServicesMenuRequestor {
     @objc func triggerContinuityMenu() {
         self.window?.makeFirstResponder(self)
         
-        // This is the native Apple API that opens the "Scan with iPhone" context menu
         NSApp.sendAction(Selector(("importFromDevice:")), to: nil, from: self)
     }
     
-    // acceptsFirstResponder is a property in modern Swift, not a function
     override var acceptsFirstResponder: Bool { return true }
     
-    // Tells the Mac we are ready to receive an image from the iPhone
     override func validRequestor(forSendType sendType: NSPasteboard.PasteboardType?, returnType: NSPasteboard.PasteboardType?) -> Any? {
         if returnType == .tiff || returnType == .png {
             return self
@@ -49,7 +44,6 @@ class ContinuityButton: NSButton, NSServicesMenuRequestor {
         return super.validRequestor(forSendType: sendType, returnType: returnType)
     }
     
-    // Fulfills the NSServicesMenuRequestor protocol to read the incoming image
     func readSelection(from pboard: NSPasteboard) -> Bool {
         guard let images = pboard.readObjects(forClasses: [NSImage.self], options: nil) as? [NSImage],
               let firstImage = images.first,
@@ -57,7 +51,6 @@ class ContinuityButton: NSButton, NSServicesMenuRequestor {
             return false
         }
         
-        // Pass it back to our AI Neural Engine
         onScanComplete?(cgImage)
         return true
     }

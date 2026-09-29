@@ -20,12 +20,11 @@ struct LogExpenseIntent: AppIntent {
     
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        // --- FIX: Use exact same ModelConfiguration as the Main App to prevent SQLite locks ---
         let schema = Schema([VaultItem.self, VaultCluster.self])
         let modelConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false,
-            cloudKitDatabase: .automatic // Must match the configuration in VaultScanApp
+            cloudKitDatabase: .automatic
         )
         
         guard let container = try? ModelContainer(for: schema, configurations: [modelConfiguration]) else {
@@ -41,7 +40,6 @@ struct LogExpenseIntent: AppIntent {
             isWarrantyTracked: false
         )
         
-        // Find or create the semantic cluster based on what the user told Siri
         let descriptor = FetchDescriptor<VaultCluster>()
         let existingClusters = (try? context.fetch(descriptor)) ?? []
         
@@ -53,7 +51,6 @@ struct LogExpenseIntent: AppIntent {
             assignedCluster = newCluster
         }
         
-        // Link the node to the graph edge
         newItem.cluster = assignedCluster
         assignedCluster?.items?.append(newItem)
         

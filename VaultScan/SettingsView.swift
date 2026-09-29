@@ -43,7 +43,6 @@ struct SettingsView: View {
                         Text("Dark").tag(2)
                     }
                     
-                    // Fixed deprecated binding animation by observing it on the Section below
                     Toggle(isOn: $useWalletLayout) {
                         Label("3D Wallet Layout", systemImage: "square.stack.3d.up.fill")
                     }

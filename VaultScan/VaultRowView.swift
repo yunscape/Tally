@@ -4,7 +4,6 @@ struct VaultRowView: View {
     let item: VaultItem
     
     var categoryIcon: String {
-        // Safely unwraps the Graph Cluster name
         let clusterName = item.cluster?.name ?? "Miscellaneous"
         
         switch clusterName {
@@ -19,8 +18,6 @@ struct VaultRowView: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            
-            // Refined, softer icon container
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(Color.primary.opacity(0.06))
@@ -28,7 +25,7 @@ struct VaultRowView: View {
                 
                 Image(systemName: categoryIcon)
                     .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(.blue.opacity(0.8)) // Muted semantic blue
+                    .foregroundColor(.blue.opacity(0.8))
             }
             
             VStack(alignment: .leading, spacing: 4) {
@@ -36,7 +33,6 @@ struct VaultRowView: View {
                     .font(.system(.headline, design: .rounded))
                 
                 HStack(spacing: 6) {
-                    // Displays the relational cluster name
                     Text(item.cluster?.name ?? "Miscellaneous")
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .padding(.horizontal, 8)
@@ -53,12 +49,10 @@ struct VaultRowView: View {
             Spacer()
             
             VStack(alignment: .trailing, spacing: 4) {
-                // Apple's strict monospaced currency formatting
                 Text(String(format: "$%.2f", item.amount))
                     .font(.system(.headline, design: .rounded))
                     .monospacedDigit()
                 
-                // Muted pastel tags instead of harsh primary colors
                 if item.isDeductible {
                     Text("Deductible")
                         .font(.system(size: 10, weight: .bold, design: .rounded))

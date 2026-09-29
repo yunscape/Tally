@@ -13,19 +13,15 @@ struct AnalyticsView: View {
     @State private var csvURL: URL?
     @State private var pdfURL: URL?
     @State private var rawSelectedDate: Date?
-    
-    // 1. Move chart data to State to prevent main-thread stuttering during scrubbing
     @State private var chartData: [DailyExpense] = []
     
     var body: some View {
         NavigationStack {
             ZStack {
-                AmbientBackground() // Ensure this is accessible in your global scope
+                AmbientBackground()
                 
                 ScrollView {
                     VStack(spacing: 24) {
-                        
-                        // 1. HERO METRIC
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Total Lifetime Value")
                                 .font(.headline)
@@ -38,8 +34,6 @@ struct AnalyticsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 24)
                         .padding(.top, 20)
-                        
-                        // 2. INTERACTIVE SWIFT CHART WITH SCRUBBER
                         VStack(alignment: .leading) {
                             Text("Category Breakdown")
                                 .font(.headline)
@@ -86,7 +80,6 @@ struct AnalyticsView: View {
                         .shadow(color: .black.opacity(0.04), radius: 20, y: 10)
                         .padding(.horizontal, 20)
                         
-                        // 3. EXPORT DATA SECTION
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Export Reports")
                                 .font(.headline)
@@ -163,18 +156,14 @@ struct AnalyticsView: View {
                     #endif
                 }
             }
-            // 2. Process data outside the render loop when items change
             .task(id: items) {
                 await processDataAsync()
             }
             .preferredColorScheme(appTheme == 1 ? .light : appTheme == 2 ? .dark : nil)
         }
     }
-    
-    // MARK: - Data Processing
     @MainActor
     private func processDataAsync() async {
-        // Calculate the chart grouping safely
         var data: [DailyExpense] = []
         let calendar = Calendar.current
             
@@ -194,14 +183,10 @@ struct AnalyticsView: View {
         }
         
         chartData = data.sorted { $0.date < $1.date }
-        
-        // Refresh export reports so they contain the latest artifacts
         csvURL = ReportGenerator.generateCSV(from: items)
         pdfURL = PDFGenerator.generatePDF(from: items)
     }
 }
-
-// MARK: - Helper Views
 struct DailyExpense: Identifiable {
     let id = UUID()
     let date: Date

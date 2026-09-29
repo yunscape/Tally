@@ -5,10 +5,8 @@ import PassKit
 struct ItemDetailView: View {
     @Bindable var item: VaultItem
     
-    // Dynamically fetch available semantic clusters for the Category Picker
     @Query(sort: \VaultCluster.name) private var clusters: [VaultCluster]
     
-    // --- Wallet Integration States ---
     @State private var isGeneratingPass = false
     @State private var generatedPass: PKPass?
     @State private var showPassSheet = false
@@ -40,7 +38,6 @@ struct ItemDetailView: View {
                 DatePicker("Date", selection: $item.date, displayedComponents: .date)
                     .datePickerStyle(.compact)
                 
-                // Safely handles the new Graph Edge relationship
                 Picker("Category", selection: $item.cluster) {
                     Text("Miscellaneous").tag(nil as VaultCluster?)
                     ForEach(clusters) { cluster in
@@ -77,7 +74,6 @@ struct ItemDetailView: View {
             }
             .animation(.default, value: item.isWarrantyTracked)
             
-            // --- NEW: THE APPLE WALLET SECTION ---
             #if os(iOS)
             Section(
                 header: Text("Apple Wallet Integration"),
@@ -94,7 +90,6 @@ struct ItemDetailView: View {
                 } else {
                     HStack {
                         Spacer()
-                        // The Native Apple Button
                         AddToWalletButton {
                             generateAndShowPass()
                         }
@@ -102,7 +97,6 @@ struct ItemDetailView: View {
                         Spacer()
                     }
                     .padding(.vertical, 4)
-                    // Hides the standard form row background so the button floats cleanly
                     .listRowBackground(Color.clear)
                 }
             }
@@ -111,7 +105,6 @@ struct ItemDetailView: View {
         .navigationTitle("Edit Item")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
-        // SUMMONS THE WALLET SHEET
         .sheet(isPresented: $showPassSheet) {
             if let pass = generatedPass {
                 AddPassView(pass: pass)
@@ -124,12 +117,10 @@ struct ItemDetailView: View {
         #endif
     }
     
-    // MARK: - Pass Generation Logic
     private func generateAndShowPass() {
         isGeneratingPass = true
         
         Task {
-            // Reaches out to the backend simulation service
             if let pass = await WalletPassService.fetchSignedPass(for: item) {
                 await MainActor.run {
                     generatedPass = pass
@@ -137,7 +128,6 @@ struct ItemDetailView: View {
                     showPassSheet = true
                 }
             } else {
-                // Fails gracefully if the backend isn't connected yet
                 await MainActor.run {
                     isGeneratingPass = false
                     print("Backend connection required for Pass signing.")

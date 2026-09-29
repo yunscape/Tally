@@ -1,6 +1,5 @@
 import SwiftUI
 
-// @MainActor ensures the UI rendering happens safely on the main thread
 @MainActor
 class PDFGenerator {
     
@@ -9,7 +8,6 @@ class PDFGenerator {
         
         let total = items.reduce(0) { $0 + $1.amount }
         
-        // 1. We design the PDF layout exactly like a normal SwiftUI View!
         let reportView = VStack(alignment: .leading, spacing: 16) {
             Text("VaultScan Expense Report")
                 .font(.system(size: 32, weight: .bold))
@@ -19,7 +17,6 @@ class PDFGenerator {
             
             Divider()
             
-            // Table Header
             HStack {
                 Text("Date").bold().frame(width: 100, alignment: .leading)
                 Text("Vendor").bold().frame(maxWidth: .infinity, alignment: .leading)
@@ -29,7 +26,6 @@ class PDFGenerator {
             
             Divider()
             
-            // Table Rows
             ForEach(items) { item in
                 HStack {
                     Text(item.date, format: .dateTime.month().day().year())
@@ -38,7 +34,6 @@ class PDFGenerator {
                     Text(item.vendorName)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    // Safely unwraps the relational graph cluster
                     Text(item.cluster?.name ?? "Miscellaneous")
                         .frame(width: 100, alignment: .leading)
                     
@@ -51,7 +46,6 @@ class PDFGenerator {
             
             Spacer()
             
-            // Grand Total
             HStack {
                 Spacer()
                 Text("Total:")
@@ -61,10 +55,9 @@ class PDFGenerator {
             }
         }
         .padding(40)
-        .frame(width: 612, height: 792) // Standard 8.5 x 11 inch paper size
+        .frame(width: 612, height: 792)
         .background(Color.white)
         
-        // 2. We tell SwiftUI to render that view into a PDF document
         let renderer = ImageRenderer(content: reportView)
         
         renderer.render { size, context in

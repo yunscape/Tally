@@ -9,23 +9,20 @@ final class VaultItem {
     var vendorName: String = ""
     var amount: Double = 0.0
     var date: Date = Date()
-    
-    // Feature: Tax Deductible & Subscriptions
     var isDeductible: Bool = false
     var isRecurring: Bool = false
     var billingCycle: String? = nil
-    
-    // Feature: Warranties & Digital Integration
     var isWarrantyTracked: Bool = false
     var expiryDate: Date? = nil
     var serialNumber: String? = nil
     var importedFromWallet: Bool = false
     var sourceApp: String? = nil
     
-    // --- THE GRAPH EDGE ---
-    // Links this specific receipt to a dynamically generated cluster
     @Relationship(inverse: \VaultCluster.items)
     var cluster: VaultCluster?
+    
+    @Relationship(inverse: \VaultProject.items)
+    var projects: [VaultProject]? = []
     
     init(
         title: String = "Imported Receipt",
@@ -61,8 +58,6 @@ final class VaultCluster {
     @Attribute(.unique) var id: UUID = UUID()
     var name: String = ""
     var systemIcon: String = "folder.fill"
-    
-    // The interconnected nodes (receipts) in this semantic cluster
     var items: [VaultItem]? = []
     
     init(name: String, systemIcon: String = "folder.fill") {

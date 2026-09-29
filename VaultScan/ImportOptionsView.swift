@@ -26,14 +26,12 @@ struct ImportOptionsView: View {
             ZStack {
                 VStack(spacing: 24) {
                     
-                    // --- DYNAMIC SCANNER BUTTON ---
                     #if os(iOS)
                     ImportButton(title: "Scan Receipt", icon: "camera.viewfinder", color: .blue) {
                         showScanner = true
                     }
                     #elseif os(macOS)
                     ImportButton(title: "Scan with iPhone", icon: "iphone.and.arrow.forward", color: .blue) {
-                        // The click is intercepted by the invisible overlay below
                     }
                     .overlay(
                         MacContinuityScannerOverlay { cgImage in
@@ -41,7 +39,6 @@ struct ImportOptionsView: View {
                         }
                     )
                     #endif
-                    // ------------------------------
                     
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
                         HStack {
@@ -88,7 +85,6 @@ struct ImportOptionsView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-            // Only compiles the iOS native scanner on an iPhone
             #if os(iOS)
             .sheet(isPresented: $showScanner) {
                 DocumentScannerView { cgImage in

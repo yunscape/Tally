@@ -1,6 +1,5 @@
 import SwiftUI
 
-// This checks if we are running on an iPhone/iPad
 #if os(iOS)
 import UIKit
 import VisionKit
@@ -28,10 +27,8 @@ struct DocumentScannerView: UIViewControllerRepresentable {
             self.parent = parent
         }
         
-        // When the user taps "Save" on the camera screen
         func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFinishWith scan: VNDocumentCameraScan) {
             if scan.pageCount > 0 {
-                // Grab the perfectly cropped first page
                 let image = scan.imageOfPage(at: 0)
                 if let cgImage = image.cgImage {
                     parent.onScanComplete(cgImage)
@@ -47,7 +44,6 @@ struct DocumentScannerView: UIViewControllerRepresentable {
 }
 
 #else
-// This is the fallback view for your Mac since it doesn't have a rear document camera
 struct DocumentScannerView: View {
     @Environment(\.dismiss) private var dismiss
     var onScanComplete: ((CGImage) -> Void)

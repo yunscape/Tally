@@ -4,7 +4,6 @@ import PhotosUI
 import PDFKit
 import UniformTypeIdentifiers
 
-// 1. Added Conditional UI Framework Imports
 #if os(iOS)
 import UIKit
 #elseif os(macOS)
@@ -14,7 +13,6 @@ import AppKit
 struct ContentView: View {
     @Environment(\.modelContext) private var context
     
-    // --- Querying both the items and the graph clusters ---
     @Query(sort: \VaultItem.date, order: .reverse) private var items: [VaultItem]
     @Query(sort: \VaultCluster.name) private var clusters: [VaultCluster]
     
@@ -26,11 +24,7 @@ struct ContentView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var selectedTab = 0
     @State private var selectedItem: VaultItem?
-    
-    // --- Active Cluster Selection ---
     @State private var activeClusterFilter: VaultCluster? = nil
-    
-    // --- Banner State ---
     @State private var showSuccessBanner = false
     
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -40,8 +34,6 @@ struct ContentView: View {
     
     var totalExpenses: Double { items.reduce(0) { $0 + $1.amount } }
     var activeWarranties: Int { items.filter { $0.isWarrantyTracked }.count }
-    
-    // --- Filtering first by Graph Cluster, then by Tab ---
     var filteredItems: [VaultItem] {
         var baseItems = items
         
@@ -139,9 +131,7 @@ struct ContentView: View {
                 ToolbarItem(placement: .primaryAction) {
                     HStack(spacing: 12) {
                         
-                        // --- THE SNEAK MENU ---
                         #if os(iOS)
-                        // Tap = Zero-UI Camera, Long-Press = Picker Menu
                         Menu {
                             PhotosPicker(selection: $selectedPhoto, matching: .images) {
                                 Label("Upload Image", systemImage: "photo.on.rectangle")
@@ -156,7 +146,6 @@ struct ContentView: View {
                             isScanning = true
                         }
                         #elseif os(macOS)
-                        // Click = Continuity Scanner, Right-Click = Native Mac File Picker
                         Button(action: { /* AppKit Continuity handles the direct click */ }) {
                             Image(systemName: "plus")
                         }
@@ -185,11 +174,9 @@ struct ContentView: View {
                         Text(activeClusterFilter == nil ? "No artifacts found" : "No artifacts in this cluster")
                             .font(.subheadline).foregroundColor(.secondary).padding(.vertical, 40)
                     } else if useWalletLayout {
-                        // --- THE 3D SPATIAL WALLET FAN ---
                         WalletFanLayout(items: filteredItems, selectedItem: $selectedItem)
                             .padding(.horizontal, 20)
                     } else {
-                        // --- THE CLASSIC HIGH-SPEED LIST ---
                         LazyVStack(spacing: 16) {
                             ForEach(filteredItems) { item in
                                 NavigationLink(destination: ItemDetailView(item: item)) {
@@ -233,7 +220,6 @@ struct ContentView: View {
         .sheet(isPresented: $showAnalytics) { AnalyticsView() }
         .sheet(isPresented: $showSettings) { SettingsView() }
         
-        // --- NATIVE FILE & PHOTO HANDLERS ---
         .fileImporter(isPresented: $showFilePicker, allowedContentTypes: [.pdf, .image]) { result in
             if case .success(let url) = result {
                 if url.pathExtension.lowercased() == "pdf" {
@@ -272,7 +258,6 @@ struct ContentView: View {
                 }
             }
         }
-        // --- Transient Success Banner ---
         .overlay(alignment: .top) {
             if showSuccessBanner {
                 HStack(spacing: 12) {
@@ -291,40 +276,30 @@ struct ContentView: View {
                 .transition(.move(edge: .top).combined(with: .scale(scale: 0.9)).combined(with: .opacity))
             }
         }
-        // --- THE ONBOARDING TRIGGER (Platform Aware) ---
         .modifier(OnboardingPresentationModifier(hasCompletedOnboarding: $hasCompletedOnboarding))
     }
     
-    // --- Relational Graph Architecture & Neural Engine Trigger ---
     private func processInstantScan(_ cgImage: CGImage) {
         isProcessing = true
         
         Task {
             let result = await OCRService.shared.processImage(cgImage)
-            
-            // 1. Process through the Semantic Anchor Engine
             let semanticConcept = VaultIntelligenceEngine.shared.processArtifact(vendor: result.vendor, amount: result.amount, existingClusters: clusters)
             
             await MainActor.run {
-                // 2. Find existing cluster or generate a new one
                 var assignedCluster = clusters.first(where: { $0.name == semanticConcept })
                 
                 if assignedCluster == nil {
-                    // Create a new cluster node dynamically
                     let newCluster = VaultCluster(name: semanticConcept, systemIcon: "wand.and.stars")
                     context.insert(newCluster)
                     assignedCluster = newCluster
                 }
-                
-                // 3. Create the artifact node
                 let newItem = VaultItem(
                     title: "Imported Receipt",
                     vendorName: result.vendor,
                     amount: result.amount,
                     isWarrantyTracked: false
                 )
-                
-                // 4. Form the graph edge (relationship)
                 newItem.cluster = assignedCluster
                 assignedCluster?.items?.append(newItem)
                 
@@ -333,14 +308,11 @@ struct ContentView: View {
                 isScanning = false
                 selectedItem = newItem
                 
-                // Trigger the physical feedback and the UI banner
                 if enableHaptics { HapticManager.shared.playSuccess() }
                 
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
                     showSuccessBanner = true
                 }
-                
-                // Automatically dismiss the banner after 2.5 seconds
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                     withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
                         showSuccessBanner = false
@@ -349,15 +321,13 @@ struct ContentView: View {
             }
         }
     }
-    
-    // 2. Secured PDF Extraction
     private func parsePDF(at url: URL) {
         guard url.startAccessingSecurityScopedResource() else { return }
         isProcessing = true
         
         guard let pdfDocument = PDFDocument(url: url),
-              !pdfDocument.isLocked,           // Ensure we don't crash on password-protected PDFs
-              pdfDocument.pageCount > 0,       // Ensure the PDF isn't entirely empty
+              !pdfDocument.isLocked,
+              pdfDocument.pageCount > 0,
               let firstPage = pdfDocument.page(at: 0) else {
             url.stopAccessingSecurityScopedResource()
             isProcessing = false
@@ -400,24 +370,20 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Platform-Aware Presentation Modifier
 struct OnboardingPresentationModifier: ViewModifier {
     @Binding var hasCompletedOnboarding: Bool
     
     func body(content: Content) -> some View {
-        // Create a binding that evaluates the inverse logic needed for presentation
         let presentationBinding = Binding(
             get: { !hasCompletedOnboarding },
             set: { newValue in hasCompletedOnboarding = !newValue }
         )
         
         #if os(iOS)
-        // iOS supports immersive full-screen covers
         content.fullScreenCover(isPresented: presentationBinding) {
             OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
         }
         #else
-        // macOS falls back to a standard modal sheet
         content.sheet(isPresented: presentationBinding) {
             OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                 .frame(minWidth: 600, minHeight: 450)
@@ -425,8 +391,6 @@ struct OnboardingPresentationModifier: ViewModifier {
         #endif
     }
 }
-
-// MARK: - Subcomponents
 
 struct SmartClusterCapsule: View {
     let title: String
@@ -490,7 +454,6 @@ struct VaultArtifactCard: View {
             }
             
             HStack {
-                // Accesses the relational graph cluster
                 Text(item.cluster?.name ?? "Miscellaneous")
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .padding(.horizontal, 10)
